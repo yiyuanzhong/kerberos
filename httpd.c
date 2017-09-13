@@ -891,7 +891,7 @@ struct httpd *httpd_start(
         }
     }
 
-    if (c->favicon_filename) {
+    if (c->favicon_filename && *c->favicon_filename) {
         p = httpd_read_file(c->favicon_filename, &size);
         if (!p) {
             return httpd_stop(h), NULL;

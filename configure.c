@@ -39,6 +39,7 @@ void configure_free(struct configure *c)
 
 #define Ts(x) if (!json_object_object_get_ex(o, #x, &p) || !json_object_is_type(p, json_type_string)) return -1; c->x = json_object_get_string(p)
 #define Td(x) if (!json_object_object_get_ex(o, #x, &p) || !json_object_is_type(p, json_type_int)) return -1; c->x = json_object_get_int(p)
+#define TS(x) if (json_object_object_get_ex(o, #x, &p) && json_object_is_type(p, json_type_string)) c->x = json_object_get_string(p)
 static int configure_parse(
         struct configure *c,
         struct json_object *o)
@@ -53,7 +54,8 @@ static int configure_parse(
     Ts(device);
     Ts(chain_name);
     Ts(hostname);
-    Ts(denied_template_filename);
+    TS(favicon_filename);
+    TS(denied_template_filename);
     Ts(splash_template_filename);
     Ts(welcome_template_filename);
     return 0;

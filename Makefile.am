@@ -14,7 +14,7 @@
 
 
 AUTOMAKE_OPTIONS = foreign nostdinc
-bin_PROGRAMS = kerberos
+sbin_PROGRAMS = kerberos
 SUBDIRS = .
 
 kerberos_CPPFLAGS = \
