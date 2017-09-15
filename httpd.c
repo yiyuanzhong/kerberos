@@ -739,7 +739,7 @@ static int httpd_handler(
     memcpy(&arp.arp_pa, addr, sizeof(*addr));
 
     if (ioctl(h->socket, SIOCGARP, &arp)) {
-        //return httpd_standard_response(connection, MHD_HTTP_FORBIDDEN, url, 0);
+        return httpd_standard_response(connection, MHD_HTTP_FORBIDDEN, url, 0);
     }
 
     if (httpd_should_redirect(h, host)) {
