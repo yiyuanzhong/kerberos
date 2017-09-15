@@ -40,6 +40,7 @@ struct httpd {
     char *denied_tmpl;
     char *splash_tmpl;
     char *welcome_tmpl;
+    char *host_and_port;
 
     struct MHD_Response *favicon;
     struct MHD_Response *splash_redirect;
@@ -52,6 +53,7 @@ struct httpd {
     const char *host;
     int milliseconds;
     const char *key;
+    uint16_t port;
     int socket;
 
 }; /* struct httpd */
@@ -669,6 +671,23 @@ static int httpd_handle_login(
     }
 }
 
+static int httpd_should_redirect(struct httpd *h, const char *host)
+{
+    if (!host) {
+        return 0;
+
+    } else if (h->port == 80) {
+        if (strcmp(host, h->host) && strcmp(host, h->host_and_port)) {
+            return 1;
+        }
+
+    } else if (strcmp(host, h->host_and_port)) {
+        return 1;
+    }
+
+    return 0;
+}
+
 static int httpd_handler(
         void *cls,
         struct MHD_Connection *connection,
@@ -690,17 +709,18 @@ static int httpd_handler(
     (void)upload_data;
     (void)con_cls;
 
-    h = (struct httpd *)cls;
-    if (strcmp(version, MHD_HTTP_VERSION_1_1)) {
-        return httpd_standard_response(connection, MHD_HTTP_BAD_REQUEST, NULL, 1);
-    }
-
     host = MHD_lookup_connection_value(
             connection,
             MHD_HEADER_KIND,
             MHD_HTTP_HEADER_HOST);
 
-    if (!host) {
+    h = (struct httpd *)cls;
+    if (strcmp(version, MHD_HTTP_VERSION_1_1) == 0) {
+        if (!host) {
+            return httpd_standard_response(connection, MHD_HTTP_BAD_REQUEST, NULL, 1);
+        }
+
+    } else if (strcmp(version, MHD_HTTP_VERSION_1_0)) {
         return httpd_standard_response(connection, MHD_HTTP_BAD_REQUEST, NULL, 1);
     }
 
@@ -719,10 +739,10 @@ static int httpd_handler(
     memcpy(&arp.arp_pa, addr, sizeof(*addr));
 
     if (ioctl(h->socket, SIOCGARP, &arp)) {
-        return httpd_standard_response(connection, MHD_HTTP_FORBIDDEN, url, 0);
+        //return httpd_standard_response(connection, MHD_HTTP_FORBIDDEN, url, 0);
     }
 
-    if (strcmp(host, h->host)) {
+    if (httpd_should_redirect(h, host)) {
         return MHD_queue_response(connection, MHD_HTTP_FOUND, h->splash_redirect);
     }
 
@@ -752,6 +772,9 @@ static int httpd_handler(
         if (h->favicon) {
             return MHD_queue_response(connection, MHD_HTTP_OK, h->favicon);
         }
+
+    } else if (!host) {
+        return MHD_queue_response(connection, MHD_HTTP_FOUND, h->splash_redirect);
     }
 
     return httpd_standard_response(connection, MHD_HTTP_NOT_FOUND, url, 0);
@@ -835,6 +858,10 @@ void httpd_stop(struct httpd *h)
         free(h->welcome_tmpl);
     }
 
+    if (h->host_and_port) {
+        free(h->host_and_port);
+    }
+
     free(h);
 }
 
@@ -874,9 +901,16 @@ struct httpd *httpd_start(
     h->favicon_url = "/favicon.ico";
 
     h->key = c->key;
+    h->port = c->port;
     h->host = c->hostname;
     h->device = c->device;
     h->admin = c->admin_email;
+
+    snprintf(buffer, sizeof(buffer), "%s:%u", c->hostname, c->port);
+    h->host_and_port = strdup(buffer);
+    if (!h->host_and_port) {
+        return httpd_stop(h), NULL;
+    }
 
     h->welcome_tmpl = httpd_read_file(c->welcome_template_filename, NULL);
     h->splash_tmpl = httpd_read_file(c->splash_template_filename, NULL);
