@@ -20,6 +20,7 @@
 #include <stdint.h>
 
 struct configure {
+    int iptables_mark;
     uint16_t port;
     int milliseconds;
     const char *key;

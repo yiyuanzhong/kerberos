@@ -41,6 +41,7 @@ struct iptables {
     const char *chain;
     const char *iptables;
     struct node *allowed;
+    int mark;
 }; /* struct iptables */
 
 static void iptables_node_add(struct iptables *i, struct node *p)
@@ -85,8 +86,8 @@ static int iptables_insert(
             (unsigned char)eth->sa_data[5]);
 
     sprintf(buffer,
-            "%s -I %s -s %s -m mac --mac-source %s -j RETURN",
-            i->iptables, i->chain, sip, smac);
+            "%s -t mangle -I %s -s %s -m mac --mac-source %s -j MARK --set-xmark 0x%x/0x%x",
+            i->iptables, i->chain, sip, smac, i->mark, i->mark);
 
     return system(buffer);
 }
@@ -110,8 +111,8 @@ static int iptables_delete(
              (unsigned char)eth->sa_data[5]);
 
     snprintf(buffer, sizeof(buffer),
-            "%s -D %s -s %s -m mac --mac-source %s -j RETURN",
-            i->iptables, i->chain, sip, smac);
+            "%s -t mangle -D %s -s %s -m mac --mac-source %s -j MARK --set-xmark 0x%x/0x%x",
+            i->iptables, i->chain, sip, smac, i->mark, i->mark);
 
     return system(buffer);
 }
@@ -163,6 +164,7 @@ struct iptables *iptables_start(const struct configure *c)
     }
 
     i->iptables = c->iptables_path;
+    i->mark = c->iptables_mark;
     i->chain = c->chain_name;
     i->device = c->device;
     return i;

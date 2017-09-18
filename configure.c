@@ -48,6 +48,7 @@ static int configure_parse(
 
     Ts(key);
     Td(port);
+    Td(iptables_mark);
     Td(milliseconds);
     Ts(admin_email);
     Ts(iptables_path);
