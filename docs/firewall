@@ -1,0 +1,122 @@
+config defaults
+	option syn_flood	1
+	option input		DROP
+	option output		DROP
+	option forward		DROP
+	option disable_ipv6	1
+
+config zone
+	option name		lan
+	list   network		'lan'
+	option input		REJECT
+	option output		ACCEPT
+	option forward		DROP
+
+config zone
+	option name		wan
+	list   network		'wan'
+	option input		REJECT
+	option output		ACCEPT
+	option forward		DROP
+	option masq		1
+
+config rule
+	option src		wan
+	option proto		udp
+	option dest_port	68
+	option target		ACCEPT
+	option family		ipv4
+
+config rule
+	option src		wan
+	option proto		tcp
+	option dest_port	22
+	option target		ACCEPT
+
+config rule
+	option src		wan
+	option proto		icmp
+	option family		ipv4
+	option target		ACCEPT
+
+config rule
+	option src		lan
+	option proto		tcp
+	option dest_port	22
+	option target		ACCEPT
+
+config rule                      
+	option src		lan
+	option proto		icmp  
+	option family		ipv4
+	option target		ACCEPT
+
+config rule
+	option src		lan
+	option proto		tcpudp
+	option dest_port	53
+	option target		ACCEPT
+
+config rule
+	option src		lan
+	option proto		udp
+	option dest_port	67
+	option family		ipv4
+	option target		ACCEPT
+
+config rule
+	option src		lan
+	option proto		tcp
+	option dest_port	80
+	option target		ACCEPT
+
+config redirect
+	option src		lan
+	option src_dport	80
+	option mark		!0x80
+	option proto		tcp
+	option target		DNAT
+
+config rule
+	option src		lan
+	option dest		*
+	option dest_ip		10.0.0.0/8
+	option proto		all
+	option target		DROP
+
+config rule
+	option src		lan
+	option dest		*
+	option dest_ip		172.16.0.0/12
+	option proto		all
+	option target		DROP
+
+config rule
+	option src		lan
+	option dest		*
+	option dest_ip		169.254.0.0/16
+	option proto		all
+	option target		DROP
+
+config rule
+	option src		lan
+	option dest		*
+	option dest_ip		192.168.0.0/16
+	option proto		all
+	option target		DROP
+
+config rule
+	option src		lan
+	option dest		wan
+	option mark		0x80
+	option proto		tcp
+	option dest_port	80
+	option target		ACCEPT
+
+config rule
+	option src		lan
+	option dest		wan
+	option mark		0x80
+	option proto		tcp
+	option dest_port	443
+	option target		ACCEPT
