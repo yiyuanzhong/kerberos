@@ -14,7 +14,7 @@
 
 
 AC_PREREQ([2.59])
-AC_INIT([kerberos], [1.0.0], [yiyuanzhong@gmail.com])
+AC_INIT([kerberos], [1.0], [yiyuanzhong@gmail.com])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile])
 AM_INIT_AUTOMAKE
