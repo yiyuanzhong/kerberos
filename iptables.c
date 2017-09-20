@@ -72,9 +72,9 @@ static int iptables_insert(
         const struct sockaddr *eth,
         const struct sockaddr_in *in)
 {
-    char buffer[128];
-    char smac[32];
-    char sip[16];
+    char buffer[1024];
+    char smac[64];
+    char sip[32];
 
     inet_ntop(AF_INET, &in->sin_addr, sip, sizeof(sip));
     sprintf(smac, "%02x:%02x:%02x:%02x:%02x:%02x",
