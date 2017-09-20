@@ -24,8 +24,7 @@
 #include <string.h>
 #include <time.h>
 
-#include <openssl/hmac.h>
-#include <openssl/md5.h>
+#include <libubox/md5.h>
 #include <microhttpd.h>
 
 #include "configure.h"
@@ -65,9 +64,52 @@ struct hash {
 }; /* struct hash */
 
 struct token {
-    unsigned char hash[MD5_DIGEST_LENGTH];
+    unsigned char hash[16];
     int32_t time;
 }; /* struct token */
+
+static void httpd_hmac(
+        const char *key,
+        const void *input,
+        size_t length,
+        void *output)
+{
+    unsigned char buffer[64];
+    unsigned char hkey[64];
+    size_t keylen;
+    md5_ctx_t ctx;
+    int i;
+
+    keylen = strlen(key);
+    if (keylen > sizeof(hkey)) {
+        md5_begin(&ctx);
+        md5_hash(key, keylen, &ctx);
+        md5_end(hkey, &ctx);
+        memset(hkey + 16, 0, sizeof(hkey) - 16);
+
+    } else if (keylen < sizeof(hkey)) {
+        memcpy(hkey, key, keylen);
+        memset(hkey + keylen, 0, sizeof(hkey) - keylen);
+
+    } else {
+        memcpy(hkey, key, sizeof(hkey));
+    }
+
+    for (i = 0; i < sizeof(hkey); ++i) {
+        buffer[i] = hkey[i] ^ 0x36;
+        hkey[i] ^= 0x5c;
+    }
+
+    md5_begin(&ctx);
+    md5_hash(buffer, sizeof(buffer), &ctx);
+    md5_hash(input, length, &ctx);
+    md5_end(buffer, &ctx);
+
+    md5_begin(&ctx);
+    md5_hash(hkey, sizeof(hkey), &ctx);
+    md5_hash(buffer, 16, &ctx);
+    md5_end(output, &ctx);
+}
 
 static int httpd_generate_token(
         char *token,
@@ -76,7 +118,6 @@ static int httpd_generate_token(
         const struct sockaddr_in *in)
 {
     static const char H[] = "0123456789abcdef";
-    unsigned int hlen;
     struct token t;
     struct hash h;
     size_t i;
@@ -86,18 +127,8 @@ static int httpd_generate_token(
     memcpy(&h.ip, &in->sin_addr, sizeof(h.ip));
     h.time = time(NULL);
 
-    hlen = sizeof(t.hash);
     memset(&t, 0, sizeof(t));
-    if (!HMAC(EVP_md5(),
-              key,
-              strlen(key),
-              (unsigned char *)&h,
-              sizeof(h),
-              t.hash,
-              &hlen)) {
-
-        return -1;
-    }
+    httpd_hmac(key, &h, sizeof(h), t.hash);
 
     t.time = h.time;
     for (i = 0; i < sizeof(t); ++i) {
@@ -128,7 +159,7 @@ static int httpd_check_token(
         const struct sockaddr *eth,
         const struct sockaddr_in *in)
 {
-    unsigned char hash[MD5_DIGEST_LENGTH];
+    unsigned char hash[16];
     unsigned int hlen;
     struct token t;
     struct hash h;
@@ -156,18 +187,7 @@ static int httpd_check_token(
     memcpy(&h.ip, &in->sin_addr, sizeof(h.ip));
     h.time = t.time;
 
-    hlen = sizeof(hash);
-    if (!HMAC(EVP_md5(),
-              key,
-              strlen(key),
-              (unsigned char *)&h,
-              sizeof(h),
-              hash,
-              &hlen)) {
-
-        return -1;
-    }
-
+    httpd_hmac(key, &h, sizeof(h), hash);
     if (memcmp(hash, t.hash, sizeof(hash))) {
         return -1;
     }

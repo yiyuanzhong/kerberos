@@ -25,9 +25,9 @@ AM_PROG_CC_C_O
 AC_LANG([C])
 
 PKG_CHECK_MODULES([libjson_c], [json-c])
-PKG_CHECK_MODULES([libcrypto], [libcrypto])
 PKG_CHECK_MODULES([libmicrohttpd], [libmicrohttpd])
 
 AC_SEARCH_LIBS([pthread_mutex_lock], [pthread])
+AC_SEARCH_LIBS([md5_begin], [ubox])
 
 AC_OUTPUT

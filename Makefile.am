@@ -19,12 +19,10 @@ SUBDIRS = .
 
 kerberos_CPPFLAGS = \
         @libjson_c_CFLAGS@ \
-        @libcrypto_CFLAGS@ \
         @libmicrohttpd_CFLAGS@
 
 kerberos_LDADD = \
         @libjson_c_LIBS@ \
-        @libcrypto_LIBS@ \
         @libmicrohttpd_LIBS@
 
 kerberos_SOURCES = \
