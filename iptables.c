@@ -85,7 +85,7 @@ static int iptables_insert(
             (unsigned char)eth->sa_data[4],
             (unsigned char)eth->sa_data[5]);
 
-    sprintf(buffer,
+    snprintf(buffer, sizeof(buffer),
             "%s -t mangle -I %s -s %s -m mac --mac-source %s -j MARK --set-xmark 0x%x/0x%x",
             i->iptables, i->chain, sip, smac, i->mark, i->mark);
 
