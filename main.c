@@ -111,6 +111,7 @@ int main(int argc, char *argv[])
 
     if (!c->device || check_device(c->device)) {
         fprintf(stderr, "Device [%s] doesn't exist\n", c->device);
+        configure_free(c);
         return EXIT_FAILURE;
     }
 
