@@ -1,8 +1,13 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN"
+"http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+
 <html>
 <head>
-<title>OK</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="refresh" content="0; url=https://yiyuanzhong.com/" />
+<title>Welcome</title>
 </head>
 <body>
-<p>Welcome</p>
+<p>You're now connected, thank you!</p>
 </body>
 </html>
