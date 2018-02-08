@@ -691,23 +691,6 @@ static int httpd_handle_login(
     }
 }
 
-static int httpd_should_redirect(struct httpd *h, const char *host)
-{
-    if (!host) {
-        return 0;
-
-    } else if (h->port == 80) {
-        if (strcmp(host, h->host) && strcmp(host, h->host_and_port)) {
-            return 1;
-        }
-
-    } else if (strcmp(host, h->host_and_port)) {
-        return 1;
-    }
-
-    return 0;
-}
-
 static int httpd_handler(
         void *cls,
         struct MHD_Connection *connection,
@@ -762,18 +745,7 @@ static int httpd_handler(
         return httpd_standard_response(connection, MHD_HTTP_FORBIDDEN, url, 0);
     }
 
-    if (httpd_should_redirect(h, host)) {
-        return MHD_queue_response(connection, MHD_HTTP_FOUND, h->splash_redirect);
-    }
-
-    if (strcmp(url, h->splash_url) == 0) {
-        return httpd_handle_splash(
-                h,
-                &arp.arp_ha,
-                (const struct sockaddr_in *)addr,
-                connection);
-
-    } else if (strcmp(url, h->welcome_url) == 0) {
+    if (strcmp(url, h->welcome_url) == 0) {
         return httpd_handle_welcome(
                 h,
                 &arp.arp_ha,
@@ -792,12 +764,13 @@ static int httpd_handler(
         if (h->favicon) {
             return MHD_queue_response(connection, MHD_HTTP_OK, h->favicon);
         }
-
-    } else if (!host) {
-        return MHD_queue_response(connection, MHD_HTTP_FOUND, h->splash_redirect);
     }
 
-    return httpd_standard_response(connection, MHD_HTTP_NOT_FOUND, url, 0);
+    return httpd_handle_splash(
+            h,
+            &arp.arp_ha,
+            (const struct sockaddr_in *)addr,
+            connection);
 }
 
 static char *httpd_read_file(const char *filename, size_t *size)
@@ -915,9 +888,9 @@ struct httpd *httpd_start(
     memset(h, 0, sizeof(*h));
     h->socket = -1;
 
-    h->login_url   = "/login/";
-    h->splash_url  = "/splash/";
-    h->welcome_url = "/welcome/";
+    h->login_url   = "/kerberos/login/";
+    h->splash_url  = "/kerberos/splash/";
+    h->welcome_url = "/kerberos/welcome/";
     h->favicon_url = "/favicon.ico";
 
     h->key = c->key;
