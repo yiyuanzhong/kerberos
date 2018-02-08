@@ -31,7 +31,7 @@ while reserving 5 erase blocks (minimal requirement for jffs2):
 And now with LEDE 17.01 the above packages can no longer fit. Tried many different ways
 to shrink the image (removing unused dependencies from freeradius3, disabling OpenSSL
 cipher suites, ...), still can't fit. So I have to rewrite kerberos completely:
-* freeradius
+* freeradius (OpenSSL)
 * hostapd
 * kerberos (libmicrohttpd)
 
